@@ -3,13 +3,14 @@
 import { use } from 'react'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { AddButton } from '@/features/blog/components/AddButton'
 import { useIsOwner } from '@/features/blog/hooks/useIsOwner'
+import { usePosts } from '@/features/posts/hooks/usePosts'
+import type { Post } from '@/features/posts/types'
+
+import { AddButton } from '@/features/blog/components/AddButton'
 import { DailyNoteCard } from '@/features/daily-note/components/DailyNoteCard'
 import { OneYearAgoCard } from '@/features/posts/components/OneYearAgoCard'
 import { PostGrid } from '@/features/posts/components/PostGrid'
-import { usePosts } from '@/features/posts/hooks/usePosts'
-import type { Post } from '@/features/posts/types'
 
 import styles from './page.module.css'
 
@@ -38,7 +39,7 @@ interface BlogPageProps {
 
 const BlogPage = ({ params }: BlogPageProps) => {
   const { username } = use(params)
-  const { user } = useAuth()
+  const { user, isReady } = useAuth()
   const isOwner = useIsOwner(username)
 
   const authorId = isOwner ? (user?.id ?? null) : null

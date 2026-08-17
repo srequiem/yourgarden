@@ -1,0 +1,38 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.error {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, #c67139 12%, transparent);
+  color: var(--color-accent-700);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.submit {
+  padding: 11px 0;
+  font-size: 15px;
+}
+
+.success {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 8px 4px;
+}
+
+.successTitle {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  color: var(--color-accent-700);
+}
+
+.successText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+}

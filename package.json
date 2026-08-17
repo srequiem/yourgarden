@@ -13,6 +13,8 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,css,md}\""
   },
   "dependencies": {
+    "@supabase/ssr": "^0.12.4",
+    "@supabase/supabase-js": "^2.112.3",
     "@tanstack/react-query": "^5.101.4",
     "@tiptap/core": "^2.10.3",
     "@tiptap/extension-highlight": "^2.27.2",

@@ -1,12 +1,13 @@
 /*
  * Types du domaine auth.
  *
- * Différence importante vs la version précédente : on ajoute `username`.
- * On en a besoin parce que l'URL de chaque blog dépend directement de ce champ
- * (tonblog.com/{username}). Pour le MVP mock, on le dérive de l'email
- * (partie avant l'arobase). Quand Supabase arrivera, on stockera un vrai username
- * choisi à l'inscription, avec la logique de modification + redirect 301 décidée
- * (voir MIGRATION.md et l'échange qu'on a eu sur username_history).
+ * Register : name + username + email + password
+ *   Le username détermine l'URL du blog (/{username}).
+ *   Modifiable plus tard avec redirect auto + réserve 90 jours (cf. mémoire).
+ *
+ * Login : email + password uniquement, pour rester simple.
+ *   On pourra ajouter le login par username plus tard si besoin — le username est en base,
+ *   il suffira d'une server action qui résout username → email avant l'appel Supabase.
  */
 
 export enum AuthMode {
@@ -21,8 +22,14 @@ export interface User {
   email: string
 }
 
-export interface AuthCredentials {
-  name?: string
+export interface RegisterCredentials {
+  name: string
+  username: string
+  email: string
+  password: string
+}
+
+export interface LoginCredentials {
   email: string
   password: string
 }

@@ -1,50 +1,66 @@
 'use client'
 
+import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 
-import { readJson, removeKey, writeJson } from '@/lib/storage'
+import { getBrowserSupabase } from '@/lib/supabase/browser'
 
-import { AuthMode, type AuthCredentials, type User } from '../types'
+import type { LoginCredentials, RegisterCredentials, User } from '../types'
 
 /*
- * Hook d'authentification.
+ * Hook d'authentification — version Supabase.
  *
- * Version MVP entièrement mockée en localStorage — aucun serveur, aucun hash, aucune sécurité.
- * L'objectif à ce stade est uniquement de simuler le flow (inscription → session → déconnexion)
- * pour pouvoir développer le reste du produit. Le remplacement par Supabase Auth se fera
- * en changeant *uniquement* le corps de `authenticate` et de `logout`, sans toucher aux
- * composants qui consomment `useAuth` (c'est tout l'intérêt de la couche hook).
+ * Ce hook fait trois choses :
  *
- * Adaptations Next.js :
- * - `use client` obligatoire : on utilise useState/useEffect/useContext.
- * - On lit localStorage dans un useEffect, pas dans l'initializer de useState, sinon crash SSR.
- *   Conséquence : un flash "non connecté" au premier rendu. On y remédie plus tard avec un
- *   petit loader / squelette si nécessaire.
+ * 1. Expose `user` (notre type métier, avec username et name) et `isReady` (true dès que
+ *    Supabase a répondu, même si personne n'est connecté).
+ *
+ * 2. Expose `login`, `register`, `logout` — les seules actions du domaine auth.
+ *
+ * 3. Synchronise l'état user avec Supabase en temps réel :
+ *    - Au mount : on lit la session courante (posée par le middleware serveur dans les cookies)
+ *      et on charge le profil correspondant depuis la table profiles.
+ *    - Ensuite : on écoute onAuthStateChange pour réagir aux login/logout/refresh de token,
+ *      y compris ceux qui se produisent dans d'autres onglets ou depuis le serveur.
+ *
+ * Le user final est la FUSION de deux sources :
+ *   - auth.users (Supabase Auth) → id, email
+ *   - public.profiles (nous) → username, name
+ * On les combine dans hydrateUser() ci-dessous.
  */
-
-const STORAGE_KEY = 'yourgarden.user'
 
 interface AuthContextValue {
   user: User | null
   isReady: boolean
-  authenticate: (mode: AuthMode, credentials: AuthCredentials) => Promise<User>
-  logout: () => void
+  login: (credentials: LoginCredentials) => Promise<User>
+  register: (credentials: RegisterCredentials) => Promise<void>
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 /**
- * Dérive un username à partir de l'email pour le mock.
- * Ex: "sacha.requiem@gmail.com" → "sacha-requiem"
- * On sanitise pour rester compatible avec un slug d'URL.
+ * Compose notre User métier à partir d'un utilisateur Supabase Auth + son profil.
+ * Renvoie null si le profil n'existe pas (ne devrait pas arriver grâce au trigger,
+ * mais on gère le cas défensivement).
  */
-const deriveUsernameFromEmail = (email: string): string => {
-  const localPart = email.split('@')[0] ?? 'moi'
-  return localPart
-    .toLowerCase()
-    .replace(/[^a-z0-9-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 32)
+const hydrateUser = async (supabaseUser: SupabaseUser): Promise<User | null> => {
+  const supabase = getBrowserSupabase()
+
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('username, name')
+    .eq('id', supabaseUser.id)
+    .single()
+
+  if (error || !profile) return null
+
+  return {
+    id: supabaseUser.id,
+    email: supabaseUser.email ?? '',
+    username: profile.username,
+    name: profile.name,
+  }
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -52,39 +68,93 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isReady, setIsReady] = useState(false)
 
   useEffect(() => {
-    // Première lecture localStorage côté client uniquement.
-    setUser(readJson<User>(STORAGE_KEY))
-    setIsReady(true)
+    const supabase = getBrowserSupabase()
+
+    // Fonction commune : à partir d'une session, on met à jour le user.
+    const syncFromSession = async (session: Session | null): Promise<void> => {
+      if (!session?.user) {
+        setUser(null)
+        return
+      }
+      const hydrated = await hydrateUser(session.user)
+      setUser(hydrated)
+    }
+
+    // 1. Chargement initial : on demande la session courante à Supabase.
+    //    Elle vient des cookies posés par le middleware, donc c'est instantané (pas de round-trip HTTP).
+    void supabase.auth.getSession().then(async ({ data }) => {
+      await syncFromSession(data.session)
+      setIsReady(true)
+    })
+
+    // 2. Abonnement aux changements : login, logout, refresh de token, session dans un autre onglet.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void syncFromSession(session)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
-  const authenticate = useCallback(
-    async (mode: AuthMode, credentials: AuthCredentials): Promise<User> => {
-      const displayName =
-        mode === AuthMode.Register && credentials.name
-          ? credentials.name
-          : (credentials.email.split('@')[0] ?? 'Moi')
+  const login = useCallback(async (credentials: LoginCredentials): Promise<User> => {
+    const supabase = getBrowserSupabase()
 
-      const nextUser: User = {
-        id: crypto.randomUUID(),
-        username: deriveUsernameFromEmail(credentials.email),
-        name: displayName,
-        email: credentials.email,
-      }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: credentials.email,
+      password: credentials.password,
+    })
 
-      writeJson(STORAGE_KEY, nextUser)
-      setUser(nextUser)
-      return nextUser
-    },
-    [],
-  )
+    if (error) throw error
+    if (!data.user) throw new Error('Aucun utilisateur retourné après connexion.')
 
-  const logout = useCallback((): void => {
-    removeKey(STORAGE_KEY)
+    // Le onAuthStateChange va aussi se déclencher et mettre à jour le state,
+    // mais on hydrate immédiatement pour renvoyer le user à l'appelant (qui en a besoin
+    // pour la redirection /{username}).
+    const hydrated = await hydrateUser(data.user)
+    if (!hydrated) throw new Error('Profil introuvable.')
+
+    setUser(hydrated)
+    return hydrated
+  }, [])
+
+  const register = useCallback(async (credentials: RegisterCredentials): Promise<void> => {
+    const supabase = getBrowserSupabase()
+
+    // On passe username et name via user_metadata → le trigger côté BDD les récupère
+    // dans raw_user_meta_data pour créer la ligne profiles automatiquement.
+    // emailRedirectTo indique où Supabase renverra l'utilisateur après clic sur le lien
+    // de confirmation de son email.
+    const { error } = await supabase.auth.signUp({
+      email: credentials.email,
+      password: credentials.password,
+      options: {
+        data: {
+          username: credentials.username,
+          name: credentials.name,
+        },
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    })
+
+    if (error) throw error
+
+    // Volontairement pas de setUser ici : avec "Confirm email" activé, la session n'existe
+    // pas encore. Le user devra cliquer le lien dans l'email pour être vraiment connecté.
+    // Le RegisterForm affiche un message "check your email" plutôt qu'une redirection.
+  }, [])
+
+  const logout = useCallback(async (): Promise<void> => {
+    const supabase = getBrowserSupabase()
+    const { error } = await supabase.auth.signOut()
+    if (error) throw error
     setUser(null)
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isReady, authenticate, logout }}>
+    <AuthContext.Provider value={{ user, isReady, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )
