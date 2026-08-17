@@ -1,0 +1,28 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 640px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (min-width: 960px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 28px;
+  }
+}
+
+.empty {
+  padding: 60px 24px;
+  text-align: center;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  font-size: 14px;
+}

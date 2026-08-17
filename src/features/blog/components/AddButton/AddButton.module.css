@@ -1,0 +1,30 @@
+.button {
+  position: fixed;
+  left: 26px;
+  bottom: 26px;
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  font-family: var(--font-heading);
+  font-size: 28px;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-md);
+  z-index: 40;
+  transition:
+    transform 0.12s ease,
+    opacity 0.15s ease;
+}
+
+.button:hover {
+  transform: scale(1.05);
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

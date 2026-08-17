@@ -1,0 +1,112 @@
+/*
+ * Styles typographiques de l'éditeur.
+ * TipTap génère du HTML sémantique standard (p, h1..h3, ul, blockquote, img).
+ * Comme les nodes de TipTap ne portent pas de classes propres, on cible ici les balises
+ * directement à l'intérieur du .editor. Simple et suffisant pour un premier jet.
+ */
+
+.editor {
+  font-size: 16px;
+  line-height: 1.75;
+  min-height: 340px;
+  outline: none;
+}
+
+.editor :global(.ProseMirror) {
+  outline: none;
+  min-height: 340px;
+}
+
+.editor :global(.ProseMirror:focus) {
+  outline: none;
+}
+
+.editor :global(h1) {
+  font-family: var(--font-heading);
+  font-size: 40px;
+  margin: 24px 0 12px;
+}
+
+.editor :global(h2) {
+  font-family: var(--font-heading);
+  font-size: 28px;
+  margin: 20px 0 10px;
+}
+
+.editor :global(h3) {
+  font-family: var(--font-heading);
+  font-size: 22px;
+  margin: 16px 0 8px;
+}
+
+.editor :global(p) {
+  margin: 0 0 14px;
+}
+
+.editor :global(ul),
+.editor :global(ol) {
+  margin: 0 0 14px;
+  padding-left: 22px;
+}
+
+.editor :global(blockquote) {
+  margin: 18px 0;
+  padding: 4px 18px;
+  border-left: 3px solid var(--color-accent);
+  color: color-mix(in srgb, var(--color-text) 80%, transparent);
+  font-style: italic;
+}
+
+.editor :global(img) {
+  max-width: 100%;
+  border-radius: var(--radius-md);
+  margin: 18px 0;
+}
+
+/*
+ * Surbrillance (@tiptap/extension-highlight en multicolor) : la couleur elle-même arrive en
+ * style inline sur le <mark>, on ne s'occupe donc ici que de la forme.
+ * `box-decoration-break: clone` pour que le rayon et le padding se répètent proprement quand
+ * une phrase surlignée passe à la ligne — sans ça, seul le début et la fin sont arrondis.
+ */
+.editor :global(mark) {
+  padding: 0 3px;
+  border-radius: 4px;
+  color: inherit;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.editor :global(u) {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+}
+
+.editor :global(s) {
+  text-decoration: line-through;
+  text-decoration-color: color-mix(in srgb, var(--color-text) 60%, transparent);
+}
+
+/* Séparateur inséré par le bouton "—" de la toolbar (horizontalRule du StarterKit). */
+.editor :global(hr) {
+  border: none;
+  height: 1px;
+  background: var(--color-divider);
+  margin: 32px 0;
+}
+
+/* Sélection d'un nœud bloc (hr, image) via clic ou gapcursor. */
+.editor :global(.ProseMirror-selectednode) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Placeholder rendu par l'extension @tiptap/extension-placeholder */
+.editor :global(.is-editor-empty::before) {
+  content: attr(data-placeholder);
+  float: left;
+  color: color-mix(in srgb, var(--color-text) 45%, transparent);
+  pointer-events: none;
+  height: 0;
+}

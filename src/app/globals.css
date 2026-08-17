@@ -1,0 +1,86 @@
+/*
+ * Design tokens et resets globaux.
+ * Repris tel quel de ton ancien src/index.css : mêmes couleurs, mêmes fonts, même vibe "yourgarden".
+ * Les Google Fonts (Caprasimo, Figtree) sont chargées dans src/app/layout.tsx via next/font.
+ */
+
+:root {
+  --font-heading: var(--font-heading-src), system-ui, sans-serif;
+  --font-body: var(--font-body-src), system-ui, sans-serif;
+
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
+  --color-text: #201e1d;
+  --color-accent: #c67139;
+  --color-accent-600: #b2622d;
+  --color-accent-700: #8c491a;
+  --color-accent-2: #7a8a5e;
+  --color-accent-2-200: #e1eecc;
+  --color-accent-2-300: #ccdbb2;
+  --color-accent-2-800: #3d472b;
+  --color-divider: color-mix(in srgb, #201e1d 16%, transparent);
+
+  /*
+   * Rouge destructif (bouton Supprimer). Volontairement un rouge pastel de la même famille
+   * que les surbrillances TipTap, et non un rouge d'alerte système : dans un carnet perso,
+   * supprimer un billet est une action normale, pas un incident. Le -700 est la teinte du
+   * texte posé sur le -200 (contraste ~6:1), le -300 sert au hover.
+   */
+  --color-danger-200: #f2b8b8;
+  --color-danger-300: #e79c9c;
+  --color-danger-700: #8a2b1f;
+
+  --radius-md: 16px;
+  --radius-lg: 28px;
+
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  line-height: 1.12;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

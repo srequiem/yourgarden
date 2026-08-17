@@ -1,0 +1,34 @@
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  align-items: start;
+  padding-top: 18px;
+  border-top: 2px solid var(--color-divider);
+}
+
+@media (min-width: 960px) {
+  .layout {
+    grid-template-columns: 1fr 340px;
+    gap: 36px;
+  }
+}
+
+.main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.aside {
+  position: sticky;
+  top: 18px;
+}
+
+@media (max-width: 960px) {
+  .aside {
+    position: static;
+    order: -1;
+  }
+}

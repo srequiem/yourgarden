@@ -1,0 +1,27 @@
+.container {
+  position: fixed;
+  right: 26px;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 50;
+}
+
+.label {
+  font-size: 12px;
+  padding: 6px 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.button {
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: var(--color-bg);
+  box-shadow: var(--shadow-md);
+  display: grid;
+  place-items: center;
+}

@@ -1,0 +1,74 @@
+.article {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 18px;
+  flex-wrap: wrap;
+}
+
+.back {
+  font-family: var(--font-heading);
+  font-size: 18px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.date {
+  margin-right: auto;
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.saving {
+  font-size: 12px;
+  color: var(--color-accent);
+  opacity: 0.8;
+}
+
+/* Libellé de la confirmation de suppression, à gauche des boutons Annuler / Oui. */
+.confirm {
+  font-size: 13px;
+  color: var(--color-danger-700);
+}
+
+.error {
+  font-size: 12px;
+  color: var(--color-danger-700);
+}
+
+.titleInput {
+  font-family: var(--font-heading);
+  font-size: 40px;
+  line-height: 1.12;
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 0;
+  color: var(--color-text);
+  caret-color: var(--color-accent);
+  width: 100%;
+}
+
+.titleInput::placeholder {
+  color: color-mix(in srgb, var(--color-text) 40%, transparent);
+}
+
+.title {
+  margin: 0;
+  font-size: 40px;
+}
+
+.state {
+  padding: 80px 24px;
+  text-align: center;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+  font-size: 15px;
+}

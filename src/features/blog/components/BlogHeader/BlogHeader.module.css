@@ -1,0 +1,21 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 0;
+}
+
+.identity {
+  margin-right: auto;
+}
+
+.name {
+  font-family: var(--font-heading);
+  font-size: 20px;
+}
+
+.date {
+  font-size: 12px;
+  opacity: 0.6;
+  letter-spacing: 0.04em;
+}

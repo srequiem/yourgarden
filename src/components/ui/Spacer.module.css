@@ -1,0 +1,5 @@
+.spacer {
+  flex: 1 1 0;
+  align-self: stretch;
+  pointer-events: none;
+}
