@@ -147,7 +147,7 @@ const PostPage = ({ params }: PostPageProps) => {
                 </Button>
               </>
             ) : (
-              <Button variant={ButtonVariant.Delete} onClick={() => setIsConfirmingDelete(true)}>
+              <Button variant={ButtonVariant.Clean} onClick={() => setIsConfirmingDelete(true)}>
                 Supprimer
               </Button>
             )}
