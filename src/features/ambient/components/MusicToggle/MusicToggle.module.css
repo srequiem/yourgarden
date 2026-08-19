@@ -8,20 +8,73 @@
   z-index: 50;
 }
 
+/*
+ * Le label du thème n'apparaît que 2,5s après un changement : il entre en glissant
+ * depuis la droite, dans la direction d'où viendrait un objet posé à côté du bouton.
+ */
 .label {
   font-size: 12px;
-  padding: 6px 14px;
-  box-shadow: var(--shadow-sm);
+  padding: 7px 15px;
+  box-shadow: var(--shadow-glass);
+  animation: label-in 0.32s var(--ease-out);
 }
 
+/*
+ * Contrairement au FAB de création, celui-ci est en verre : c'est une commande
+ * d'ambiance, secondaire, elle n'a pas à réclamer autant d'attention que le "+".
+ */
 .button {
   width: 52px;
   height: 52px;
-  border: none;
+  border: 1px solid var(--glass-stroke);
   border-radius: 999px;
-  background: var(--color-accent);
-  color: var(--color-bg);
-  box-shadow: var(--shadow-md);
   display: grid;
   place-items: center;
+
+  background-color: var(--glass-strong);
+  background-image: var(--glass-highlight);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  color: var(--color-accent-2-800);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass);
+
+  transition:
+    transform 0.28s var(--ease-spring),
+    box-shadow 0.28s var(--ease-out),
+    background-color 0.28s var(--ease-out),
+    color 0.28s var(--ease-out);
+}
+
+.button:hover {
+  transform: translateY(-3px) scale(1.05);
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+  border-color: var(--glass-stroke-strong);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg) 50%, transparent),
+    var(--glow-accent);
+}
+
+.button:active {
+  transform: translateY(-1px) scale(0.97);
+}
+
+@keyframes label-in {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    right: 16px;
+    bottom: 16px;
+  }
 }

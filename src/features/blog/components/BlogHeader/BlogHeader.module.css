@@ -1,21 +1,113 @@
+/*
+ * Grille en trois colonnes `1fr auto 1fr` plutôt qu'un flex en space-between.
+ *
+ * C'est la seule façon de centrer la date sur la largeur *réelle* : en flex, elle se
+ * centrerait dans l'espace qui reste entre les deux blocs latéraux, et se décalerait
+ * donc dès que le pseudo s'allonge ou que le bouton disparaît. Avec deux colonnes 1fr
+ * symétriques de part et d'autre, elle tombe au milieu quoi qu'il arrive — y compris
+ * pour un visiteur, où la colonne de droite est vide.
+ */
 .header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 14px;
-  padding: 18px 0;
+  gap: 16px;
+  margin: 20px 0 24px;
 }
 
+/*
+ * Padding gauche réduit à 6px : l'avatar vient presque toucher l'arête du verre, et la
+ * pastille entière se cale au bord du contenu. C'est ce qui donne la sensation d'être
+ * « vraiment tout à gauche » — un padding uniforme repousserait l'avatar vers l'intérieur.
+ */
 .identity {
-  margin-right: auto;
+  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  max-width: 100%;
+  padding: 6px 20px 6px 6px;
+  border-radius: 999px;
+
+  background-color: var(--glass-tint);
+  background-image: var(--glass-highlight);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass);
 }
 
 .name {
   font-family: var(--font-heading);
-  font-size: 20px;
+  font-size: 15px;
+  line-height: 1.2;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.date {
-  font-size: 12px;
-  opacity: 0.6;
-  letter-spacing: 0.04em;
+/*
+ * La date reste du texte nu, sans pastille : posée seule au centre, elle sert de repère
+ * calme entre deux objets en verre. Lui donner une troisième pastille aurait aligné trois
+ * boutons et fait perdre au header sa respiration.
+ *
+ * Les majuscules espacées compensent la petite taille — c'est ce qui la fait lire comme
+ * un tampon de date et non comme une étiquette oubliée là.
+ */
+.today {
+  justify-self: center;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-soft);
+  white-space: nowrap;
+}
+
+/*
+ * La déconnexion hérite du verre de la variante Secondary ; on ne lui donne ici qu'un
+ * peu plus de corps. Seule à droite, avec du vide autour, elle paraîtrait maigre à sa
+ * taille par défaut face à une pastille de 56px de haut.
+ */
+.logout {
+  justify-self: end;
+  padding: 11px 20px;
+  font-size: 13.5px;
+}
+
+/*
+ * Sous 760px les trois zones ne tiennent plus sur une ligne. Plutôt que de sacrifier la
+ * date, on la fait passer sur une seconde ligne pleine largeur : elle reste centrée et
+ * garde exactement le même rôle, alors que la masquer aurait vidé le header de son
+ * seul repère temporel.
+ */
+@media (max-width: 760px) {
+  .header {
+    grid-template-columns: 1fr auto;
+    gap: 12px 16px;
+  }
+
+  .identity {
+    grid-area: 1 / 1;
+    padding: 0px;
+  }
+
+  .logout {
+    grid-area: 1 / 2;
+    padding: 9px 15px;
+  }
+
+  /* 1 / -1 : la date occupe toute la ligne, quel que soit le nombre de colonnes. */
+  .today {
+    grid-area: 2 / 1 / 3 / -1;
+  }
+
+  .name {
+    font-size: 0px;
+    display: none;
+  }
 }

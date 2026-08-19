@@ -11,18 +11,35 @@
   }
 }
 
+/*
+ * On s'arrête à deux colonnes.
+ *
+ * La colonne principale de la home plafonne désormais à ~728px : y tenir trois cards
+ * les ramènerait à 210px de large, où un titre tient à peine dix caractères par ligne.
+ * À deux colonnes elles font ~350px et respirent. C'est aussi la meilleure réponse au
+ * « ça fait vide » — une publication isolée dans une grille de deux colonnes paraît
+ * posée là exprès, la même dans une grille de trois paraît perdue.
+ */
 @media (min-width: 960px) {
   .grid {
-    grid-template-columns: repeat(3, 1fr);
     gap: 28px;
   }
 }
 
+/*
+ * État vide : bordure pointillée plutôt que pleine, et verre très léger. Le pointillé
+ * dit "emplacement à remplir" là où une card pleine dirait "contenu manquant" — la
+ * nuance compte sur une page qu'on découvre vide au premier lancement.
+ */
 .empty {
-  padding: 60px 24px;
+  padding: 68px 24px;
   text-align: center;
-  color: color-mix(in srgb, var(--color-text) 60%, transparent);
-  background: var(--color-surface);
-  border-radius: var(--radius-lg);
+  color: var(--color-text-soft);
   font-size: 14px;
+  border-radius: var(--radius-lg);
+
+  background-color: var(--glass-soft);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px dashed color-mix(in srgb, var(--color-text) 22%, transparent);
 }

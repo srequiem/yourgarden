@@ -10,61 +10,124 @@
   font-family: var(--font-heading);
   background: transparent;
   color: var(--color-text);
+
+  /*
+   * Le ressort ne s'applique qu'au transform : un léger dépassement sur une mise à
+   * l'échelle se lit comme de la matière qui réagit, alors que le même dépassement sur
+   * une couleur ou une ombre se lit comme un bug de rendu.
+   */
   transition:
-    transform 0.08s ease,
+    transform 0.22s var(--ease-spring),
+    background-color 0.2s var(--ease-out),
+    box-shadow 0.25s var(--ease-out),
+    border-color 0.2s var(--ease-out),
     opacity 0.15s ease;
 }
 
-.base:hover {
-  opacity: 0.9;
-}
-
 .base:active {
-  transform: scale(0.98);
+  transform: scale(0.96);
 }
 
 .primary {
-  padding: 10px 22px;
+  padding: 11px 24px;
   background: var(--color-accent);
   color: var(--color-bg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg) 45%, transparent),
+    var(--glow-accent);
 }
 
+.primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg) 45%, transparent),
+    0 14px 34px -8px color-mix(in srgb, var(--color-accent) 85%, transparent);
+}
+
+/* Pastille de verre : le bouton d'action secondaire le plus courant (Déconnexion, etc.). */
 .secondary {
-  padding: 9px 16px;
-  border: 1px solid var(--color-divider);
+  padding: 9px 17px;
   font-family: var(--font-body);
   font-size: 13px;
+  background-color: var(--glass-tint);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass);
 }
 
-.clean {
-  padding: 10px 22px;
-  /* background: var(--color-accent); */
-  color: var(--font-body);
+.secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background-color: var(--glass-strong);
+  border-color: var(--glass-stroke-strong);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass-lifted);
 }
 
 .ghost {
-  padding: 6px 10px;
-  color: var(--color-accent);
+  padding: 7px 12px;
+  color: var(--color-accent-2-800);
   font-family: var(--font-body);
   font-size: 12px;
 }
 
+.ghost:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-accent-2-200) 60%, transparent);
+}
+
 .icon {
-  width: 36px;
-  height: 36px;
+  width: 38px;
+  height: 38px;
   padding: 0;
   font-family: var(--font-body);
+  background-color: var(--glass-soft);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid transparent;
+}
+
+.icon:hover:not(:disabled) {
+  background-color: var(--glass-tint);
+  border-color: var(--glass-stroke);
+}
+
+/*
+ * Variante `Clean` : actions d'effacement douces (vider le carnet du jour), à distinguer
+ * de `Danger` qui supprime définitivement une publication. Elle reste un bouton texte —
+ * elle ne doit jamais peser autant que l'action principale de la card — et ne révèle son
+ * tempérament destructif qu'au survol, en glissant vers le rouge pastel de la palette.
+ */
+.clean {
+  padding: 7px 14px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--color-text-soft);
+  border: 1px solid transparent;
+}
+
+.clean:hover:not(:disabled) {
+  color: var(--color-danger-700);
+  background-color: color-mix(in srgb, var(--color-danger-200) 42%, transparent);
+  border-color: color-mix(in srgb, var(--color-danger-200) 70%, transparent);
+  opacity: 1;
 }
 
 .danger {
   padding: 10px 18px;
   background: var(--color-danger-200);
   color: var(--color-danger-700);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg) 40%, transparent),
+    0 6px 18px -8px color-mix(in srgb, var(--color-danger-700) 55%, transparent);
 }
 
 /* :not(:disabled) — un bouton désactivé matche quand même :hover en CSS. */
 .danger:hover:not(:disabled) {
   background: var(--color-danger-300);
+  transform: translateY(-1px);
   opacity: 1;
 }
 
@@ -72,4 +135,5 @@
   opacity: 0.5;
   cursor: default;
   transform: none;
+  box-shadow: none;
 }

@@ -3,14 +3,40 @@
   grid-template-columns: 1fr;
   gap: 28px;
   align-items: start;
-  padding-top: 18px;
-  border-top: 2px solid var(--color-divider);
+  padding-top: 22px;
+
+  /*
+   * Largeur resserrée par rapport au conteneur partagé (1240px). Elle vit ici, dans le
+   * module de la home, et non dans le layout : la page d'un billet garde son conteneur
+   * d'origine. Sur une page qui compte peu de publications, 1188px de contenu laissaient
+   * trop de vide entre les cards — les rapprocher les fait exister comme un ensemble.
+   */
+  max-width: 1080px;
+  margin: 0 auto;
+
+  /*
+   * Le filet qui séparait le header du contenu était un border-top de 2px pleine largeur.
+   * Sur un fond qui bouge, un trait franc qui s'arrête net aux deux bords fait cadre et
+   * durcit toute la page. Remplacé par un cheveu d'1px qui s'éteint aux extrémités —
+   * dessiné en background plutôt qu'en border, seul moyen d'obtenir un dégradé sur un
+   * seul côté sans passer par un pseudo-élément.
+   */
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--color-divider) 12%,
+    var(--color-divider) 88%,
+    transparent 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  background-position: top left;
 }
 
 @media (min-width: 960px) {
   .layout {
-    grid-template-columns: 1fr 340px;
-    gap: 36px;
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
   }
 }
 
@@ -28,7 +54,8 @@
 
 @media (max-width: 960px) {
   .aside {
-    position: static;
-    order: -1;
+    display: none;
+    margin: 0;
+    padding: 0;
   }
 }

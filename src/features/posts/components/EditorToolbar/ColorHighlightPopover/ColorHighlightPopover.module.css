@@ -30,10 +30,33 @@
   flex-direction: column;
   gap: 8px;
   padding: 10px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-divider);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-md);
+
+  background-color: var(--glass-strong);
+  background-image: var(--glass-highlight);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass-lifted);
+
+  /*
+   * L'entrée conserve le translateX(-50%) de centrage dans chaque keyframe : l'animer
+   * sans le reporter recentrerait brutalement le popover sur son bord gauche.
+   */
+  animation: popover-in 0.2s var(--ease-out);
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
 }
 
 .swatches {
@@ -48,11 +71,14 @@
   padding: 0;
   border: 1px solid var(--color-divider);
   border-radius: 8px;
-  transition: transform 0.08s ease;
+  transition:
+    transform 0.22s var(--ease-spring),
+    box-shadow 0.2s var(--ease-out);
 }
 
 .swatch:hover {
-  transform: scale(1.08);
+  transform: scale(1.14);
+  box-shadow: 0 4px 10px -3px color-mix(in srgb, #2e2b25 40%, transparent);
 }
 
 .swatchActive {

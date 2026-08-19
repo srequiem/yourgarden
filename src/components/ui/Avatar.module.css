@@ -1,12 +1,24 @@
+/*
+ * Avatar circulaire avec l'initiale du nom.
+ * L'anneau clair autour du disque le détache du fond ambiant : sans lui, le vert de
+ * l'avatar se confond avec le halo vert quand celui-ci passe derrière.
+ */
 .avatar {
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: var(--color-accent-2-300);
+  background: color-mix(in srgb, var(--color-accent-2-300) 88%, transparent);
+  -webkit-backdrop-filter: saturate(160%) blur(10px);
+  backdrop-filter: saturate(160%) blur(10px);
   display: grid;
   place-items: center;
   font-family: var(--font-heading);
   font-size: 18px;
   color: var(--color-accent-2-800);
   flex: none;
+
+  border: 1px solid var(--glass-stroke-strong);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    0 4px 12px -4px color-mix(in srgb, #2e2b25 26%, transparent);
 }

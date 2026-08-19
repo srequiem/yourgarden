@@ -8,8 +8,27 @@
   padding: 24px;
 }
 
+/*
+ * Le titre est le premier contact avec le produit : il monte en fondu au chargement.
+ * Une seule animation, courte, sur la page la plus nue de l'app — c'est le moment où
+ * elle est gratuite en attention et où elle pose le ton.
+ */
 .title {
   margin: 0;
-  font-size: 52px;
+  font-size: clamp(44px, 12vw, 68px);
   color: var(--color-accent-700);
+  letter-spacing: -0.02em;
+  text-align: center;
+  animation: title-in 0.7s var(--ease-out) both;
+}
+
+@keyframes title-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { Caprasimo, Figtree } from 'next/font/google'
 import type { ReactNode } from 'react'
 
+import { AmbientBackdrop } from '@/components/ui/AmbientBackdrop'
+
 import { Providers } from './providers'
 import './globals.css'
 
@@ -37,6 +39,12 @@ export const metadata: Metadata = {
 const RootLayout = ({ children }: { children: ReactNode }) => (
   <html lang="fr" className={`${caprasimo.variable} ${figtree.variable}`}>
     <body>
+      {/*
+       * Monté ici, au-dessus de Providers, pour deux raisons : le décor doit être présent
+       * sur *toutes* les routes (auth comprise), et il doit être le premier élément peint
+       * dans le body pour que les surfaces en verre le captent dans leur backdrop.
+       */}
+      <AmbientBackdrop />
       <Providers>{children}</Providers>
     </body>
   </html>

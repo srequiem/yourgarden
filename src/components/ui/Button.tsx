@@ -32,7 +32,7 @@ const variantClass: Record<ButtonVariant, string> = {
   [ButtonVariant.Ghost]: styles.ghost,
   [ButtonVariant.Icon]: styles.icon,
   [ButtonVariant.Danger]: styles.danger,
-  [ButtonVariant.Clean]: styles.delete
+  [ButtonVariant.Clean]: styles.clean,
 }
 
 export const Button = ({

@@ -1,6 +1,8 @@
 .card {
-  width: min(400px, 100%);
+  width: min(408px, 100%);
   padding: 28px;
+  /* La card d'auth entre juste après le titre, dans le même mouvement. */
+  animation: card-in 0.7s var(--ease-out) 0.08s both;
 }
 
 .form {
@@ -9,28 +11,65 @@
   gap: 14px;
 }
 
+/*
+ * Contrôle segmenté Connexion / Inscription. La piste est creusée (ombre interne) et
+ * le segment actif posé dessus en accent plein : la hiérarchie se lit sans avoir à
+ * comparer deux nuances de beige.
+ */
 .modeToggle {
   display: flex;
+  gap: 4px;
+  padding: 4px;
   border-radius: 999px;
-  border: 1px solid var(--color-divider);
-  overflow: hidden;
+  background-color: color-mix(in srgb, var(--color-bg) 55%, transparent);
+  border: 1px solid var(--glass-stroke);
+  box-shadow: inset 0 1px 3px color-mix(in srgb, #2e2b25 10%, transparent);
 }
 
 .modeButton {
   flex: 1;
   padding: 9px 0;
   border: none;
+  border-radius: 999px;
   font-size: 14px;
   background: transparent;
+  color: var(--color-text-soft);
+  transition:
+    background-color 0.28s var(--ease-out),
+    color 0.28s var(--ease-out),
+    box-shadow 0.28s var(--ease-out);
+}
+
+.modeButton:hover {
   color: var(--color-text);
 }
 
 .modeButtonActive {
   background: var(--color-accent);
   color: var(--color-bg);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-bg) 45%, transparent),
+    0 4px 12px -4px color-mix(in srgb, var(--color-accent) 80%, transparent);
+}
+
+/* L'état actif l'emporte sur le hover : sans ça, survoler l'onglet courant le ternit. */
+.modeButtonActive:hover {
+  color: var(--color-bg);
 }
 
 .submit {
-  padding: 11px 0;
+  padding: 12px 0;
   font-size: 15px;
+  margin-top: 2px;
+}
+
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

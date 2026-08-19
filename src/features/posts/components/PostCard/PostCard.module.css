@@ -2,30 +2,57 @@
   text-decoration: none;
   color: inherit;
   display: block;
+  border-radius: var(--radius-lg);
 }
 
 .card {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  background: var(--color-surface);
   border-radius: var(--radius-lg);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  height: 100%;
+
+  background-color: var(--glass-tint);
+  background-image: var(--glass-highlight);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-stroke);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass);
+
   transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+    transform 0.4s var(--ease-out),
+    box-shadow 0.4s var(--ease-out),
+    border-color 0.4s var(--ease-out),
+    background-color 0.4s var(--ease-out);
 }
 
+/*
+ * Au survol la card monte et se densifie légèrement. Le gain de densité compte autant
+ * que l'élévation : une surface translucide qui se rapproche du lecteur doit devenir
+ * un peu plus opaque, sinon elle flotte sans se détacher du décor.
+ */
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+  background-color: var(--glass-strong);
+  border-color: var(--glass-stroke-strong);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass-lifted);
 }
 
 .cover {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+  /* Le zoom lent est clippé par l'overflow: hidden de la card. */
+  transition: transform 0.6s var(--ease-out);
+}
+
+.card:hover .cover {
+  transform: scale(1.045);
 }
 
 .body {
@@ -44,9 +71,10 @@
 
 .date {
   font-size: 11px;
-  letter-spacing: 0.06em;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  color: var(--color-text-faint);
 }
 
 .title {
@@ -59,7 +87,7 @@
   margin: 0;
   font-size: 14px;
   line-height: 1.55;
-  color: color-mix(in srgb, var(--color-text) 75%, transparent);
+  color: var(--color-text-soft);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;

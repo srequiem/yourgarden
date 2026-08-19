@@ -16,7 +16,12 @@ interface BlogHeaderProps {
 }
 
 /*
- * Header du blog visité.
+ * Header du blog visité — présent sur toutes les pages sous /{username}.
+ *
+ * Trois zones : identité collée à gauche, date du jour au centre exact de la largeur,
+ * déconnexion à droite. Le <header> ne porte aucune matière, ce sont les blocs qui en
+ * ont ; le décor de fond passe entre eux.
+ *
  * Après logout, on redirige explicitement vers la home — sinon on reste sur /{username}
  * qui est maintenant une page vide (le user courant ne matche plus l'owner).
  */
@@ -34,14 +39,19 @@ export const BlogHeader = ({ username, displayName }: BlogHeaderProps) => {
 
   return (
     <header className={styles.header}>
-      <Avatar name={nameToShow} />
       <div className={styles.identity}>
-        <div className={styles.name}>{nameToShow}</div>
-        <div className={styles.date}>{formatLongDate()}</div>
+        <Avatar name={nameToShow} />
+        <span className={styles.name}>{nameToShow}</span>
       </div>
 
+      <time className={styles.today}>{formatLongDate()}</time>
+
       {isOwner && (
-        <Button variant={ButtonVariant.Secondary} onClick={() => void onLogout()}>
+        <Button
+          variant={ButtonVariant.Secondary}
+          className={styles.logout}
+          onClick={() => void onLogout()}
+        >
           Déconnexion
         </Button>
       )}

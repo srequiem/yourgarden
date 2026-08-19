@@ -39,7 +39,7 @@ interface BlogPageProps {
 
 const BlogPage = ({ params }: BlogPageProps) => {
   const { username } = use(params)
-  const { user, isReady } = useAuth()
+  const { user } = useAuth()
   const isOwner = useIsOwner(username)
 
   const authorId = isOwner ? (user?.id ?? null) : null

@@ -1,13 +1,47 @@
+/*
+ * Surface de verre de référence. Tous les autres blocs translucides du produit
+ * (PostCard, toolbar, FAB, champs) reprennent cette recette :
+ *
+ *   1. un fond teinté translucide         → laisse passer le décor
+ *   2. un backdrop-filter blur + saturate → le trouble qui fait "verre" et non "calque"
+ *   3. un liseré clair                    → l'arête qui attrape la lumière
+ *   4. un dégradé diagonal en surimpression → le reflet
+ *   5. une ombre en deux couches          → contact + profondeur
+ *
+ * Le reflet passe par background-image plutôt que par un pseudo-élément : un ::before
+ * en position absolute se peindrait *par-dessus* le contenu de la card et voilerait le
+ * texte. En couche de background, il reste sous le contenu, sans stacking context à gérer.
+ */
 .card {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 24px;
   border-radius: var(--radius-lg);
-  background: var(--color-surface);
-  box-shadow: var(--shadow-sm);
+
+  background-color: var(--glass-tint);
+  background-image: var(--glass-highlight);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-stroke);
+
+  /* inset en premier : le liseré interne haut simule la tranche éclairée du verre. */
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass);
+
+  transition:
+    box-shadow 0.35s var(--ease-out),
+    border-color 0.35s var(--ease-out);
 }
 
 .elevated {
-  box-shadow: var(--shadow-md);
+  background-color: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur-strong);
+  backdrop-filter: var(--glass-blur-strong);
+  border-color: var(--glass-stroke-strong);
+  box-shadow:
+    inset 0 1px 0 var(--glass-stroke-strong),
+    var(--shadow-glass-lifted);
 }
