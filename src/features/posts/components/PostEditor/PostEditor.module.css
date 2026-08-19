@@ -57,10 +57,138 @@
   font-style: italic;
 }
 
+/*
+ * === Images redimensionnables (TipTap v3) ===
+ *
+ * L'extension enveloppe chaque image dans deux div générées :
+ *
+ *   [data-resize-container]        flex, porte l'espacement vertical
+ *     [data-resize-wrapper]        position: relative, repère des poignées
+ *       <img>                      largeur pilotée par l'attribut width du node
+ *       [data-resize-handle="…"]   une div par direction configurée
+ *
+ * Point capital : ces poignées arrivent NUES. L'implémentation ne leur pose qu'un
+ * `position: absolute`, un décalage de bord et un `data-resize-handle` — ni largeur,
+ * ni hauteur, ni curseur. Les poignées latérales héritent bien de `top: 0; bottom: 0`
+ * (donc toute la hauteur) mais d'aucune largeur, et les coins n'ont aucune dimension
+ * du tout. Sans les règles ci-dessous, elles mesurent zéro pixel et la fonctionnalité
+ * est purement et simplement insaisissable. Ce bloc n'est pas de la décoration.
+ */
+
+.editor :global([data-resize-container]) {
+  max-width: 100%;
+  margin: 18px 0;
+}
+
+.editor :global([data-resize-wrapper]) {
+  max-width: 100%;
+}
+
 .editor :global(img) {
   max-width: 100%;
+  height: auto;
   border-radius: var(--radius-md);
-  margin: 18px 0;
+  transition: box-shadow 0.25s var(--ease-out);
+}
+
+/*
+ * Les poignées ne se révèlent qu'au survol de l'image. Une image bardée de plots en
+ * permanence transforme une page de lecture en interface d'édition ; ici l'outil
+ * n'apparaît que quand la main s'approche.
+ */
+.editor :global([data-resize-handle]) {
+  opacity: 0;
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  /* Sans ça, tirer une poignée au doigt fait défiler la page au lieu de redimensionner. */
+  touch-action: none;
+  transition: opacity 0.2s var(--ease-out);
+}
+
+.editor :global([data-resize-wrapper]:hover [data-resize-handle]) {
+  opacity: 1;
+}
+
+/* Repère visuel discret sur l'image survolée : elle est manipulable. */
+.editor :global([data-resize-wrapper]:hover img) {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 60%, transparent);
+}
+
+/* Poignées latérales : zone de préhension sur toute la hauteur, barrette centrée. */
+.editor :global([data-resize-handle='left']),
+.editor :global([data-resize-handle='right']) {
+  width: 20px;
+  cursor: ew-resize;
+}
+
+.editor :global([data-resize-handle='left'])::after,
+.editor :global([data-resize-handle='right'])::after {
+  content: '';
+  width: 5px;
+  height: 44px;
+  max-height: 55%;
+  border-radius: 999px;
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-stroke-strong);
+  box-shadow: 0 2px 8px -2px color-mix(in srgb, #2e2b25 55%, transparent);
+}
+
+/* Coins bas : pastille carrée arrondie, curseurs diagonaux dans le bon sens. */
+.editor :global([data-resize-handle='bottom-left']),
+.editor :global([data-resize-handle='bottom-right']) {
+  width: 24px;
+  height: 24px;
+}
+
+.editor :global([data-resize-handle='bottom-left']) {
+  cursor: nesw-resize;
+}
+
+.editor :global([data-resize-handle='bottom-right']) {
+  cursor: nwse-resize;
+}
+
+.editor :global([data-resize-handle='bottom-left'])::after,
+.editor :global([data-resize-handle='bottom-right'])::after {
+  content: '';
+  width: 13px;
+  height: 13px;
+  border-radius: 5px;
+  background: var(--color-accent);
+  border: 1px solid var(--glass-stroke-strong);
+  box-shadow: 0 2px 8px -2px color-mix(in srgb, #2e2b25 55%, transparent);
+}
+
+/*
+ * Garde-fou lecture seule — indispensable.
+ *
+ * La NodeView appelle attachHandles() sans condition dans son constructeur, et ne
+ * retire les poignées que sur un évènement `update` de l'éditeur… qui ne survient
+ * jamais chez un visiteur. Sans cette règle, quelqu'un qui lit un post public verrait
+ * des poignées de redimensionnement inertes sur les images. On s'appuie sur le
+ * contenteditable posé par ProseMirror plutôt que sur l'état interne de la lib.
+ */
+.editor :global(.ProseMirror[contenteditable='false'] [data-resize-handle]) {
+  display: none;
+}
+
+.editor :global(.ProseMirror[contenteditable='false'] [data-resize-wrapper]:hover img) {
+  box-shadow: none;
+}
+
+/*
+ * Liens : le StarterKit v3 embarque l'extension Link, absente en v2. Le `a` global est
+ * en --color-accent, un cyan pâle qui passe mal sur le crème ; on repasse sur le
+ * terracotta de la palette, nettement plus lisible en corps de texte.
+ */
+.editor :global(a) {
+  color: var(--color-accent-700);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-thickness: 1px;
 }
 
 /*

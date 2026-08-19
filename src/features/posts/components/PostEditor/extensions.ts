@@ -2,7 +2,6 @@ import Highlight from '@tiptap/extension-highlight'
 import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
-import Underline from '@tiptap/extension-underline'
 import StarterKit from '@tiptap/starter-kit'
 import type { MutableRefObject } from 'react'
 
@@ -15,8 +14,9 @@ import type { MutableRefObject } from 'react'
  * On restreint volontairement les niveaux de titre à H1/H2/H3 (pas H4-H6 : personne
  * n'en a besoin dans un journal perso, et ça complique la hiérarchie visuelle).
  *
- * Underline : PAS dans le StarterKit en TipTap v2 (il n'y entre qu'en v3), il faut donc
- * l'ajouter à la main. Strike, lui, y est déjà — pas besoin de le déclarer.
+ * Underline : entré dans le StarterKit avec la v3, on ne le déclare donc plus à la main
+ * (le paquet @tiptap/extension-underline a été retiré des dépendances). Strike y était déjà.
+ * La v3 y ajoute aussi Link, ListKeymap et TrailingNode, laissés actifs par défaut.
  *
  * Highlight en `multicolor: true` : la marque porte alors un attribut `color`, ce qui permet
  * au ColorHighlightPopover de proposer une palette plutôt qu'un unique jaune. On stocke des
@@ -59,9 +59,35 @@ export const createExtensions = (handlerRef: MutableRefObject<ImageDropHandler |
   StarterKit.configure({
     heading: { levels: [1, 2, 3] },
   }),
-  Underline,
   Highlight.configure({ multicolor: true }),
-  Image.configure({ inline: false, allowBase64: false }).extend({
+  Image.configure({
+    inline: false,
+    allowBase64: false,
+    /*
+     * Redimensionnement natif (v3 uniquement — l'option n'existe pas en v2).
+     *
+     * On n'expose que les poignées latérales et les deux coins bas : les poignées du
+     * haut obligeraient à tirer vers le haut contre le sens de lecture, et dans un
+     * texte qui défile c'est le geste le plus inconfortable.
+     *
+     * `alwaysPreserveAspectRatio` évite qu'une photo puisse être écrasée par accident —
+     * dans un carnet personnel on veut réduire une image, jamais la déformer.
+     *
+     * minWidth à 120 : en dessous, la vignette ne dit plus rien de son contenu.
+     *
+     * ATTENTION : les poignées natives sont livrées SANS dimensions (l'implémentation
+     * ne pose qu'un `position: absolute` et un `data-resize-handle`). Elles sont donc
+     * inutilisables tant que le CSS ne leur donne pas de taille — voir la section
+     * correspondante dans PostEditor.module.css. Ce n'est pas du décor, c'est ce qui
+     * rend la fonctionnalité saisissable.
+     */
+    resize: {
+      enabled: true,
+      directions: ['left', 'right', 'bottom-left', 'bottom-right'],
+      minWidth: 120,
+      alwaysPreserveAspectRatio: true,
+    },
+  }).extend({
     addProseMirrorPlugins() {
       return [
         new Plugin({
