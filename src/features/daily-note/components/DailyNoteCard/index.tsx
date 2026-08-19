@@ -34,7 +34,7 @@ export const DailyNoteCard = () => {
 
       <div className={styles.footer}>
         <span>Enregistrement automatique</span>
-        <Button variant={ButtonVariant.Ghost} onClick={clear}>
+        <Button variant={ButtonVariant.Clean} onClick={clear}>
           Effacer
         </Button>
       </div>

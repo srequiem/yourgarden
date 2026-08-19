@@ -36,6 +36,12 @@
   font-size: 13px;
 }
 
+.clean {
+  padding: 10px 22px;
+  /* background: var(--color-accent); */
+  color: var(--font-body);
+}
+
 .ghost {
   padding: 6px 10px;
   color: var(--color-accent);

@@ -19,6 +19,7 @@ export enum ButtonVariant {
   Ghost = 'ghost',
   Icon = 'icon',
   Danger = 'danger',
+  Clean = 'clean',
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -31,6 +32,7 @@ const variantClass: Record<ButtonVariant, string> = {
   [ButtonVariant.Ghost]: styles.ghost,
   [ButtonVariant.Icon]: styles.icon,
   [ButtonVariant.Danger]: styles.danger,
+  [ButtonVariant.Clean]: styles.delete
 }
 
 export const Button = ({
