@@ -14,6 +14,8 @@ import { PostEditor } from '@/features/posts/components/PostEditor'
 import { usePost } from '@/features/posts/hooks/usePost'
 import { formatLongDate } from '@/lib/dates'
 
+import { ToastViewport } from '@/features/ui-feedback/components/ToastViewport'
+
 import styles from './page.module.css'
 
 /*
@@ -160,6 +162,7 @@ const PostPage = ({ params }: PostPageProps) => {
       </header>
 
       {isReallyOwner && <EditorToolbar editor={editor} />}
+      {isReallyOwner && <ToastViewport />}
 
       {isReallyOwner ? (
         <input

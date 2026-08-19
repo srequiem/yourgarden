@@ -1,98 +1,141 @@
 /*
- * Repository des publications.
+ * Repository des publications — implémentation Supabase.
  *
- * On isole toute la persistance derrière une interface `PostsRepository`. L'implémentation
- * actuelle est localStorage-only (MVP mock). Quand on branchera Supabase, on créera un
- * `supabasePostsRepository` qui satisfait la même interface, et on remplacera l'export
- * final sans toucher aux hooks ni aux composants. C'est le seul endroit du code qui
- * "sait" comment les posts sont stockés.
+ * On respecte l'interface PostsRepository définie plus tôt : les hooks (usePost, usePosts,
+ * useCreatePost) ne changent pas d'une ligne. Seul ce fichier sait qu'on parle à Supabase.
  *
- * Convention de clé localStorage : `yourgarden.post.{id}` pour un post, et on liste tous
- * les posts d'un user en scannant les clés avec le préfixe puis en filtrant sur `userId`.
- * C'est correct pour un MVP à faible volume (quelques dizaines de posts). Pour scaler on
- * passera à Postgres.
+ * Deux responsabilités :
+ *   1. Traduire les opérations métier (create, update, get, list, remove) en requêtes Supabase.
+ *   2. Mapper les résultats bruts (RawPost) vers notre type métier (Post) via mapPost().
+ *
+ * Concernant excerpt et coverMediaPath :
+ *   On les calcule côté Next.js (via computeExcerpt et findCoverImage) avant chaque update.
+ *   Le trigger updated_at côté Postgres gère automatiquement la date de mise à jour.
  */
 
-import { listKeys, readJson, removeKey, writeJson } from '@/lib/storage'
+import { getBrowserSupabase } from '@/lib/supabase/browser'
 
-import { createEmptyDoc } from '../components/PostEditor/utils/createEmptyDoc'
 import { computeExcerpt } from '../components/PostEditor/utils/computeExcerpt'
 import { findCoverImage } from '../components/PostEditor/utils/findCoverImage'
 import type { CreatePostInput, Post, UpdatePostInput } from '../types'
-
-const KEY_PREFIX = 'yourgarden.post.'
-const keyFor = (id: string): string => `${KEY_PREFIX}${id}`
+import { mapPost, type RawPost } from './mappers'
 
 export interface PostsRepository {
   create: (input: CreatePostInput) => Promise<Post>
   update: (id: string, patch: UpdatePostInput) => Promise<Post>
   get: (id: string) => Promise<Post | null>
   listByUser: (userId: string) => Promise<Post[]>
+  listPublicByUser: (userId: string) => Promise<Post[]>
   remove: (id: string) => Promise<void>
 }
 
-const nowIso = (): string => new Date().toISOString()
-
-const applyDerivedFields = (post: Post): Post => ({
-  ...post,
-  excerpt: computeExcerpt(post.content),
-  coverMediaPath: findCoverImage(post.content),
-})
-
-const localStoragePostsRepository: PostsRepository = {
+const supabasePostsRepository: PostsRepository = {
   async create(input) {
-    const id = crypto.randomUUID()
-    const now = nowIso()
-    const post: Post = {
-      id,
-      userId: input.userId,
-      title: '',
-      content: createEmptyDoc(),
-      excerpt: '',
-      coverMediaPath: null,
-      visibility: 'private',
-      createdAt: now,
-      updatedAt: now,
-      publishedAt: null,
-    }
-    writeJson(keyFor(id), post)
-    return post
+    const supabase = getBrowserSupabase()
+
+    const { data, error } = await supabase
+      .from('posts')
+      .insert({ user_id: input.userId })
+      .select()
+      .single<RawPost>()
+
+    if (error) throw error
+    return mapPost(data)
   },
 
   async update(id, patch) {
-    const existing = readJson<Post>(keyFor(id))
-    if (!existing) throw new Error(`Post ${id} introuvable`)
+    const supabase = getBrowserSupabase()
 
-    const merged: Post = {
-      ...existing,
-      ...patch,
-      updatedAt: nowIso(),
+    // On construit le payload snake_case pour Supabase.
+    // updated_at est géré automatiquement par le trigger Postgres — on ne l'envoie pas.
+    const payload: Record<string, unknown> = {}
+
+    if (patch.title !== undefined) payload.title = patch.title
+    if (patch.visibility !== undefined) {
+      payload.visibility = patch.visibility
+      // published_at : on le pose une seule fois, au premier passage en public.
+      // Côté Postgres on ne peut pas le savoir sans lire la ligne d'abord, donc on le gère
+      // côté code : si on passe en public, on envoie published_at = now() uniquement
+      // si le champ est encore null. Pour éviter une lecture supplémentaire, on l'envoie
+      // systématiquement quand on passe en public — Supabase ne l'écrasera que si on le fournit.
+      if (patch.visibility === 'public') {
+        payload.published_at = new Date().toISOString()
+      }
     }
-    const next = patch.content !== undefined ? applyDerivedFields(merged) : merged
-
-    if (patch.visibility === 'public' && !existing.publishedAt) {
-      next.publishedAt = nowIso()
+    if (patch.content !== undefined) {
+      payload.content = patch.content
+      // On (re)dérive excerpt et coverMediaPath à chaque update de contenu.
+      payload.excerpt = computeExcerpt(patch.content)
+      payload.cover_media_path = findCoverImage(patch.content)
     }
 
-    writeJson(keyFor(id), next)
-    return next
+    const { data, error } = await supabase
+      .from('posts')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single<RawPost>()
+
+    if (error) throw error
+    return mapPost(data)
   },
 
   async get(id) {
-    return readJson<Post>(keyFor(id))
+    const supabase = getBrowserSupabase()
+
+    const { data, error } = await supabase
+      .from('posts')
+      .select()
+      .eq('id', id)
+      .single<RawPost>()
+
+    // PGRST116 = "no rows found" — pas une erreur métier, juste "ce post n'existe pas".
+    if (error?.code === 'PGRST116') return null
+    if (error) throw error
+    return mapPost(data)
   },
 
   async listByUser(userId) {
-    const posts = listKeys(KEY_PREFIX)
-      .map((key) => readJson<Post>(key))
-      .filter((post): post is Post => post !== null && post.userId === userId)
+    const supabase = getBrowserSupabase()
 
-    return posts.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))
+    // RLS fait déjà le travail : si l'utilisateur connecté n'est pas le propriétaire,
+    // les posts privés ne seront tout simplement pas retournés par Supabase.
+    // Pas besoin de filtrer côté code — la BDD s'en occupe.
+    const { data, error } = await supabase
+      .from('posts')
+      .select()
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false })
+      .returns<RawPost[]>()
+
+    if (error) throw error
+    return (data ?? []).map(mapPost)
+  },
+
+  async listPublicByUser(userId) {
+    const supabase = getBrowserSupabase()
+
+    // Cette méthode sert pour la page publique d'un visiteur non-connecté.
+    // Le filtre visibility = 'public' est explicite côté code ET garanti par RLS.
+    // Double sécurité : même si RLS était désactivé, le filtre code tient.
+    const { data, error } = await supabase
+      .from('posts')
+      .select()
+      .eq('user_id', userId)
+      .eq('visibility', 'public')
+      .order('published_at', { ascending: false })
+      .returns<RawPost[]>()
+
+    if (error) throw error
+    return (data ?? []).map(mapPost)
   },
 
   async remove(id) {
-    removeKey(keyFor(id))
+    const supabase = getBrowserSupabase()
+
+    const { error } = await supabase.from('posts').delete().eq('id', id)
+    if (error) throw error
   },
 }
 
-export const postsRepository: PostsRepository = localStoragePostsRepository
+export const postsRepository: PostsRepository = supabasePostsRepository

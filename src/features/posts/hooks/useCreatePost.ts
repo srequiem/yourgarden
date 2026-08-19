@@ -1,6 +1,6 @@
 'use client'
 
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useCallback } from 'react'
 
@@ -23,7 +23,6 @@ import { postsRepository } from '../lib/postsRepository'
 export const useCreatePost = () => {
   const { user } = useAuth()
   const router = useRouter()
-  const queryClient = useQueryClient()
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -31,7 +30,9 @@ export const useCreatePost = () => {
       return postsRepository.create({ userId: user.id })
     },
     onSuccess: (post) => {
-      queryClient.invalidateQueries({ queryKey: ['posts', post.userId] })
+      // On redirige immédiatement sans invalider le cache d'abord.
+      // L'invalidation se fera naturellement quand l'utilisateur reviendra sur la home
+      // (staleTime écoulé) ou après le premier autosave qui invalide ['posts', userId].
       if (user) router.push(`/${user.username}/p/${post.id}`)
     },
   })

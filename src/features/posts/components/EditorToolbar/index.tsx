@@ -1,11 +1,15 @@
 'use client'
 
+import { useRef } from 'react'
 import type { Editor } from '@tiptap/react'
 import { useEditorState } from '@tiptap/react'
 
 import { Button, ButtonVariant } from '@/components/ui/Button'
 import { Spacer } from '@/components/ui/Spacer'
+import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useToast } from '@/features/ui-feedback/hooks/useToast'
 
+import { uploadImage } from '../../lib/uploadImage'
 import { ColorHighlightPopover } from './ColorHighlightPopover'
 import styles from './EditorToolbar.module.css'
 
@@ -30,13 +34,16 @@ interface EditorToolbarProps {
  * de contenu — donc jamais sur un simple déplacement de sélection. Le selector ne renvoie
  * que des booléens, comparés en surface : pas de re-render à chaque frappe.
  *
- * L'insertion d'image par URL est un placeholder : on demande une URL avec `prompt()`.
- * Version 2 : bouton "Ajouter une image" qui ouvre un file picker, upload vers Supabase
- * Storage, insère un bloc image avec le storage_path retourné. Pour l'instant, coller un
- * lien direct suffit à débloquer le développement.
+ * Le bouton image ouvre un file picker natif (input type="file" caché).
+ * Au choix d'un fichier, on uploade vers Supabase Storage et on insère le bloc image.
+ * Le drag & drop est géré séparément dans le plugin ProseMirror de PostEditor.
  */
 
 export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
+  const { user } = useAuth()
+  const { showToast } = useToast()
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const state = useEditorState({
     editor,
     selector: ({ editor: instance }) => ({
@@ -53,10 +60,22 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
 
   if (!editor || !state) return null
 
-  const insertImage = (): void => {
-    const url = window.prompt("Coller l'URL de l'image (fichier upload à venir)")
-    if (!url) return
-    editor.chain().focus().setImage({ src: url }).run()
+  const onFileChange = async (event: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
+    const files = event.target.files
+    if (!files?.length || !user) return
+
+    for (const file of Array.from(files)) {
+      try {
+        const url = await uploadImage(file, user.id)
+        editor.chain().focus().setImage({ src: url }).run()
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Échec de l'upload de l'image."
+        showToast(message)
+      }
+    }
+
+    // Reset l'input pour pouvoir re-sélectionner le même fichier si besoin.
+    event.target.value = ''
   }
 
   return (
@@ -148,10 +167,20 @@ export const EditorToolbar = ({ editor }: EditorToolbarProps) => {
         variant={ButtonVariant.Icon}
         title="Ajouter une image"
         style={{ color: 'var(--color-accent)' }}
-        onClick={insertImage}
+        onClick={() => fileInputRef.current?.click()}
       >
         ▣
       </Button>
+
+      {/* Input caché : déclenché par le bouton au-dessus */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        multiple
+        onChange={(event) => void onFileChange(event)}
+        style={{ display: 'none' }}
+      />
     </div>
   )
 }
