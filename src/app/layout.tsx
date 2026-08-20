@@ -3,6 +3,7 @@ import { Caprasimo, Figtree } from 'next/font/google'
 import type { ReactNode } from 'react'
 
 import { AmbientBackdrop } from '@/components/ui/AmbientBackdrop'
+import { SmoothScroll } from '@/components/ui/SmoothScroll'
 
 import { Providers } from './providers'
 import './globals.css'
@@ -45,6 +46,8 @@ const RootLayout = ({ children }: { children: ReactNode }) => (
        * dans le body pour que les surfaces en verre le captent dans leur backdrop.
        */}
       <AmbientBackdrop />
+      {/* Ne rend rien : installe le scroll lissé sur le document entier. */}
+      <SmoothScroll />
       <Providers>{children}</Providers>
     </body>
   </html>
