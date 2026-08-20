@@ -12,13 +12,27 @@
   outline: none;
 }
 
+/*
+ * Aucun anneau de focus sur la surface d'écriture.
+ *
+ * La règle globale `:focus-visible` de globals.css pose un liseré d'accent plus un halo
+ * diffus. C'est ce qu'il faut sur un bouton, où rien d'autre ne signale qu'il est
+ * sélectionné. Sur une zone de texte c'est du bruit : le curseur clignotant *est* déjà
+ * l'indicateur de focus, et cerner toute la colonne de lecture d'un halo coloré dès la
+ * première frappe revient à souligner une évidence en gênant la lecture.
+ *
+ * Le box-shadow doit être neutralisé explicitement : `outline: none` seul ne l'atteint
+ * pas, et c'est lui qui produisait le contour coloré.
+ */
 .editor :global(.ProseMirror) {
   outline: none;
   min-height: 340px;
 }
 
-.editor :global(.ProseMirror:focus) {
+.editor :global(.ProseMirror:focus),
+.editor :global(.ProseMirror:focus-visible) {
   outline: none;
+  box-shadow: none;
 }
 
 .editor :global(h1) {
@@ -80,15 +94,68 @@
   margin: 18px 0;
 }
 
+/*
+ * Le wrapper doit épouser la largeur de l'image, jamais s'étirer.
+ *
+ * C'est la condition même de l'alignement : justify-content ne répartit que de l'espace
+ * *libre*. Tant que le wrapper occupe toute la largeur du conteneur, il n'en reste aucun,
+ * et centrer une image réduite ne produit strictement rien — c'était le symptôme.
+ *
+ * `min-width: 0` neutralise la taille minimale automatique des éléments flex, qui vaut
+ * par défaut leur taille min-content. Pour une image, c'est sa largeur intrinsèque : sans
+ * cette ligne, une photo de 3000px empêche le wrapper de descendre sous 3000px, et le
+ * redimensionnement n'a aucun effet sur l'encombrement réel du bloc.
+ *
+ * `flex: 0 0 auto` l'empêche à la fois de grandir et de rétrécir de lui-même : sa largeur
+ * ne vient plus que de l'image, c'est-à-dire de ce que l'utilisateur a décidé en tirant
+ * la poignée. Le max-width le garde dans les limites de la colonne de lecture.
+ */
 .editor :global([data-resize-wrapper]) {
+  flex: 0 0 auto;
+  min-width: 0;
   max-width: 100%;
 }
 
 .editor :global(img) {
   max-width: 100%;
-  height: auto;
   border-radius: var(--radius-md);
   transition: box-shadow 0.25s var(--ease-out);
+}
+
+/*
+ * La hauteur est forcée en `auto` — et l'!important est ici nécessaire, pas paresseux :
+ * le redimensionnement écrit une hauteur en pixels directement en style inline, qu'aucune
+ * règle de feuille de style ne peut battre autrement.
+ *
+ * Sans ça, dès que la colonne devient plus étroite que la largeur choisie (mobile, fenêtre
+ * réduite), le `max-width: 100%` rétrécit la largeur pendant que la hauteur reste figée :
+ * l'image s'écrase. En laissant la hauteur suivre, le ratio tient à toutes les tailles.
+ * Le rapport voulu est préservé de toute façon, puisque le redimensionnement est verrouillé
+ * sur le ratio (`alwaysPreserveAspectRatio`).
+ */
+.editor :global([data-resize-wrapper] img) {
+  height: auto !important;
+}
+
+/*
+ * Alignement des images.
+ *
+ * L'attribut `data-align` atterrit sur le <img>, mais c'est son conteneur qui décide de
+ * sa position horizontale. D'où le `:has()` — le seul moyen en CSS de remonter d'un
+ * enfant vers son parent.
+ *
+ * Pourquoi ne pas simplement centrer l'image avec des marges auto : le wrapper épouse
+ * exactement la largeur de l'image (c'est précisément ce qui permet aux poignées de se
+ * caler sur ses bords). Il n'y a donc aucun espace libre à l'intérieur, et une marge
+ * auto n'aurait rien à absorber. Le seul niveau qui dispose de cet espace, c'est le
+ * conteneur — qui est en flex, donc piloté par justify-content et non par text-align.
+ */
+.editor :global([data-resize-container]:has(img[data-align='center'])) {
+  justify-content: center;
+}
+
+.editor :global([data-resize-container]:has(img[data-align='right'])) {
+  justify-content: flex-end;
 }
 
 /*
@@ -224,10 +291,36 @@
   margin: 32px 0;
 }
 
-/* Sélection d'un nœud bloc (hr, image) via clic ou gapcursor. */
+/*
+ * Sélection d'un nœud bloc via clic ou gapcursor.
+ *
+ * Le liseré est conservé pour le séparateur (hr) : sélectionné, un trait d'un pixel
+ * n'aurait sinon aucun signe visible qu'on l'a attrapé.
+ */
 .editor :global(.ProseMirror-selectednode) {
   outline: 2px solid var(--color-accent);
   outline-offset: 3px;
+}
+
+/*
+ * …mais pas pour les images. Le liseré y cerne tout le conteneur de redimensionnement
+ * et se voit d'autant plus qu'il double le repère de survol déjà posé sur l'image.
+ *
+ * Une image sélectionnée se signale autrement, et mieux : par ses poignées. Elles
+ * n'apparaissaient jusqu'ici qu'au survol ; on les révèle aussi à la sélection. Le
+ * repère devient l'outil lui-même plutôt qu'un cadre décoratif — et il reste visible
+ * quand la souris part vers la toolbar pour cliquer « centrer », ce qu'un simple effet
+ * de survol ne permettait pas.
+ *
+ * Sélecteur plus spécifique que la règle ci-dessus (deux classes + attribut), il
+ * l'emporte donc sans !important.
+ */
+.editor :global([data-resize-container].ProseMirror-selectednode) {
+  outline: none;
+}
+
+.editor :global([data-resize-container].ProseMirror-selectednode [data-resize-handle]) {
+  opacity: 1;
 }
 
 /* Placeholder rendu par l'extension @tiptap/extension-placeholder */

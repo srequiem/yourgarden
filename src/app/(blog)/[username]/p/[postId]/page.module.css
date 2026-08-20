@@ -105,6 +105,17 @@
   width: 100%;
 }
 
+/*
+ * Même raison que pour le corps du billet : le titre est un champ de saisie libre, sans
+ * bordure ni fond, posé comme du texte. Un halo de focus autour ne ferait que cerner un
+ * titre qu'on est en train d'écrire — le curseur suffit à dire où l'on est.
+ */
+.titleInput:focus,
+.titleInput:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
 .titleInput::placeholder {
   color: var(--color-text-faint);
 }

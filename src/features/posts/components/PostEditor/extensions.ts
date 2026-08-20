@@ -3,6 +3,7 @@ import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
+import TextAlign from '@tiptap/extension-text-align'
 import type { MutableRefObject } from 'react'
 
 /*
@@ -36,6 +37,10 @@ import type { MutableRefObject } from 'react'
  *
  * Placeholder : affiche un texte gris quand un paragraphe est vide (celui du haut si le doc
  * est vierge). Comportement inspiré directement de Notion.
+ *
+ * TextAlign : pose un attribut global `textAlign` sur les titres et paragraphes, rendu en
+ * `style="text-align: …"` inline — il n'y a donc aucun CSS à écrire pour l'affichage, et
+ * l'alignement voyage avec le contenu. L'extension fournit aussi Mod+Shift+L / E / R.
  */
 
 export type ImageDropHandler = (files: File[]) => void
@@ -63,24 +68,6 @@ export const createExtensions = (handlerRef: MutableRefObject<ImageDropHandler |
   Image.configure({
     inline: false,
     allowBase64: false,
-    /*
-     * Redimensionnement natif (v3 uniquement — l'option n'existe pas en v2).
-     *
-     * On n'expose que les poignées latérales et les deux coins bas : les poignées du
-     * haut obligeraient à tirer vers le haut contre le sens de lecture, et dans un
-     * texte qui défile c'est le geste le plus inconfortable.
-     *
-     * `alwaysPreserveAspectRatio` évite qu'une photo puisse être écrasée par accident —
-     * dans un carnet personnel on veut réduire une image, jamais la déformer.
-     *
-     * minWidth à 120 : en dessous, la vignette ne dit plus rien de son contenu.
-     *
-     * ATTENTION : les poignées natives sont livrées SANS dimensions (l'implémentation
-     * ne pose qu'un `position: absolute` et un `data-resize-handle`). Elles sont donc
-     * inutilisables tant que le CSS ne leur donne pas de taille — voir la section
-     * correspondante dans PostEditor.module.css. Ce n'est pas du décor, c'est ce qui
-     * rend la fonctionnalité saisissable.
-     */
     resize: {
       enabled: true,
       directions: ['left', 'right', 'bottom-left', 'bottom-right'],
@@ -88,6 +75,16 @@ export const createExtensions = (handlerRef: MutableRefObject<ImageDropHandler |
       alwaysPreserveAspectRatio: true,
     },
   }).extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        align: {
+          default: null,
+          parseHTML: (element) => element.getAttribute('data-align'),
+          renderHTML: (attributes) => (attributes.align ? { 'data-align': attributes.align } : {}),
+        },
+      }
+    },
     addProseMirrorPlugins() {
       return [
         new Plugin({
@@ -122,5 +119,10 @@ export const createExtensions = (handlerRef: MutableRefObject<ImageDropHandler |
   }),
   Placeholder.configure({
     placeholder: 'Écrivez ici, aussi simplement que sur une page blanche…',
+  }),
+  TextAlign.configure({
+    types: ['heading', 'paragraph'],
+    alignments: ['left', 'center', 'right'],
+    defaultAlignment: null,
   }),
 ]
