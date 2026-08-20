@@ -1,0 +1,33 @@
+/*
+ * Le canvas se glisse entre le décor ambiant et le contenu de la page.
+ *
+ * `z-index: -1`, comme <AmbientBackdrop /> : à z-index égal c'est l'ordre du DOM qui
+ * tranche, et la page d'auth étant montée après le décor, les formes se peignent
+ * par-dessus les halos et sous le titre et la carte. C'est aussi ce qui les place dans
+ * le backdrop de la carte en verre : le nuage se retrouve refloutté derrière le givre.
+ *
+ * `blur` est ici l'outil principal, pas une finition. Le canvas trace des segments francs ;
+ * c'est ce filtre qui les transforme en volutes. Le faire à ce niveau plutôt qu'au pinceau
+ * permet de peindre des traits bien opaques — donc visibles — sans qu'aucun bord dur ne
+ * subsiste. Le canvas tournant à 30 % de la résolution, le navigateur a déjà adouci en
+ * l'agrandissant : ce flou n'a plus qu'à finir le travail.
+ *
+ * `saturate` compense la fadeur qu'introduit un flou de cette ampleur, qui moyenne les
+ * pixels et tire tout vers le gris.
+ *
+ * `multiply` : sur un fond crème, multiplier avec les pastels de la palette teinte la page
+ * comme de l'encre diluée dans l'eau. Un dessin opaque poserait un calque par-dessus ; là
+ * la couleur paraît dans le papier.
+ *
+ * Position et dimensions sont posées par le composant, pas ici. Un <canvas> est un élément
+ * remplacé : sa taille d'affichage par défaut est celle de ses attributs width/height, et
+ * un simple `inset` négatif ne l'étire pas. Il faut lui donner width/height explicitement,
+ * en même temps que la valeur du débordement — autant que tout vienne du même endroit.
+ */
+.canvas {
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(34px) saturate(1.35);
+  mix-blend-mode: multiply;
+}
