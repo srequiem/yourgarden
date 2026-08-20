@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { use, useEffect, type ReactNode } from 'react'
 
-import { MusicToggle } from '@/features/ambient/components/MusicToggle'
+// import { MusicToggle } from '@/features/ambient/components/MusicToggle'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { BlogHeader } from '@/features/blog/components/BlogHeader'
 import { useIsOwner } from '@/features/blog/hooks/useIsOwner'
@@ -60,7 +60,7 @@ const BlogLayout = ({ children, params }: BlogLayoutProps) => {
     <main className={styles.page}>
       <BlogHeader username={username} />
       {children}
-      <MusicToggle />
+      {/* <MusicToggle /> */}
     </main>
   )
 }

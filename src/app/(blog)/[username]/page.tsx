@@ -3,31 +3,29 @@
 import { use } from 'react'
 
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { useIsOwner } from '@/features/blog/hooks/useIsOwner'
-import { usePosts } from '@/features/posts/hooks/usePosts'
-import type { Post } from '@/features/posts/types'
-
+import { useProfile } from '@/features/auth/hooks/useProfile'
 import { AddButton } from '@/features/blog/components/AddButton'
+import { useIsOwner } from '@/features/blog/hooks/useIsOwner'
 import { DailyNoteCard } from '@/features/daily-note/components/DailyNoteCard'
 import { OneYearAgoCard } from '@/features/posts/components/OneYearAgoCard'
 import { PostGrid } from '@/features/posts/components/PostGrid'
+import { usePosts } from '@/features/posts/hooks/usePosts'
+import type { Post } from '@/features/posts/types'
 
 import styles from './page.module.css'
 
 /*
  * Page unique du blog : /{username}
  *
- * Ancienne architecture : deux onglets (Portfolio + Journal) qui étaient en fait le même
- * produit sous deux noms. Simplifié en une seule page qui liste toutes les publications.
+ * Étapes :
+ *   1. Résoudre le username de l'URL vers le profil de SON propriétaire (useProfile).
+ *      C'est indispensable : la page part d'un username, mais charger les posts nécessite
+ *      l'id du propriétaire — qui n'a rien à voir avec l'utilisateur connecté.
+ *   2. Charger les posts de ce propriétaire (usePosts avec profile.id).
+ *   3. Filtrer selon qui regarde : le propriétaire voit tout, un visiteur voit le public.
  *
- * Layout à 2 colonnes en desktop :
- *   - Colonne principale : "il y a un an" + grille de posts
- *   - Aside droite (owner uniquement) : DailyNoteCard (pense-bête du jour)
- * En mobile, tout empile — la DailyNoteCard passe en premier (accès rapide au pense-bête).
- *
- * Modèle fusionné maintenu :
- *   - Owner : voit tous ses posts (privés + publics), avec badge visibility et AddButton.
- *   - Visiteur : ne voit que les posts publics, pas d'AddButton, pas de DailyNoteCard.
+ * RLS fait la vraie sécurité côté BDD : même si le filtre client laissait passer un post
+ * privé, Supabase ne le renverrait pas à un visiteur non-propriétaire.
  */
 
 const filterVisiblePosts = (posts: Post[], isOwner: boolean): Post[] =>
@@ -39,13 +37,24 @@ interface BlogPageProps {
 
 const BlogPage = ({ params }: BlogPageProps) => {
   const { username } = use(params)
-  const { user } = useAuth()
   const isOwner = useIsOwner(username)
 
-  const authorId = isOwner ? (user?.id ?? null) : null
-  const { data: allPosts } = usePosts(authorId)
+  const { data: profile, isLoading: isProfileLoading } = useProfile(username)
+
+  // On charge les posts du PROPRIÉTAIRE du blog (profile.id), pas de l'utilisateur connecté.
+  const { data: allPosts } = usePosts(profile?.id ?? null)
 
   const posts = filterVisiblePosts(allPosts ?? [], isOwner)
+
+  // Profil en cours de résolution : on évite d'afficher un faux "rien de public".
+  if (isProfileLoading) {
+    return <div className={styles.state}>Chargement…</div>
+  }
+
+  // Username qui n'existe pas en base.
+  if (!profile) {
+    return <div className={styles.state}>Ce blog n&apos;existe pas.</div>
+  }
 
   return (
     <>

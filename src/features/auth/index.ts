@@ -8,3 +8,6 @@ export type {
   PasswordResetRequest,
   PasswordUpdate,
 } from './types'
+export { useProfile } from './hooks/useProfile'
+export { getProfileByUsername } from './lib/profilesRepository'
+export type { PublicProfile } from './lib/profilesRepository'
