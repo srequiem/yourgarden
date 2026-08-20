@@ -4,8 +4,13 @@ import type { Session, User as SupabaseUser } from '@supabase/supabase-js'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 
 import { getBrowserSupabase } from '@/lib/supabase/browser'
-
-import type { LoginCredentials, RegisterCredentials, User } from '../types'
+import type {
+  LoginCredentials,
+  PasswordResetRequest,
+  PasswordUpdate,
+  RegisterCredentials,
+  User,
+} from '../types'
 
 /*
  * Hook d'authentification — version Supabase.
@@ -35,6 +40,8 @@ interface AuthContextValue {
   login: (credentials: LoginCredentials) => Promise<User>
   register: (credentials: RegisterCredentials) => Promise<void>
   logout: () => Promise<void>
+  requestPasswordReset: (request: PasswordResetRequest) => Promise<void>
+  updatePassword: (update: PasswordUpdate) => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
@@ -152,9 +159,40 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (error) throw error
     setUser(null)
   }, [])
+  const requestPasswordReset = useCallback(
+    async (request: PasswordResetRequest): Promise<void> => {
+      const supabase = getBrowserSupabase()
+
+      // Supabase envoie un email contenant un lien magique. redirectTo indique où
+      // l'utilisateur atterrit après avoir cliqué : notre page dédiée de reset, où une
+      // session temporaire lui permettra de choisir un nouveau mot de passe.
+      const { error } = await supabase.auth.resetPasswordForEmail(request.email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`,
+      })
+
+      if (error) throw error
+
+      // Volontairement pas de feedback ici sur l'existence du compte : pour des raisons
+      // de sécurité, on ne révèle jamais si un email est associé à un compte ou non.
+      // Le formulaire affichera un message neutre "si un compte existe, un email est parti".
+    },
+    [],
+  )
+
+  const updatePassword = useCallback(async (update: PasswordUpdate): Promise<void> => {
+    const supabase = getBrowserSupabase()
+
+    // Appelé depuis la page /auth/reset-password, où l'utilisateur a une session temporaire
+    // ouverte par le lien magique. updateUser applique le nouveau mot de passe à cette session.
+    const { error } = await supabase.auth.updateUser({ password: update.password })
+
+    if (error) throw error
+  }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isReady, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, isReady, login, register, logout, requestPasswordReset, updatePassword }}
+    >
       {children}
     </AuthContext.Provider>
   )

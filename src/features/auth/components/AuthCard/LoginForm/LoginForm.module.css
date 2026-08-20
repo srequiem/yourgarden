@@ -17,3 +17,18 @@
   padding: 11px 0;
   font-size: 15px;
 }
+.forgotLink {
+  align-self: flex-end;
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--color-accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.forgotLink:hover {
+  opacity: 0.8;
+}

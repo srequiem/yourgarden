@@ -33,3 +33,11 @@ export interface LoginCredentials {
   email: string
   password: string
 }
+
+export interface PasswordResetRequest {
+  email: string
+}
+
+export interface PasswordUpdate {
+  password: string
+}

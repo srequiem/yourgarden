@@ -17,7 +17,11 @@ import styles from './LoginForm.module.css'
  * En cas d'erreur, affiche un message humain traduit via formatAuthError.
  */
 
-export const LoginForm = () => {
+interface LoginFormProps {
+  onForgotPassword: () => void
+}
+
+export const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -60,6 +64,19 @@ export const LoginForm = () => {
         minLength={8}
         autoComplete="current-password"
       />
+      <Input
+        type="password"
+        placeholder="Mot de passe"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        required
+        minLength={8}
+        autoComplete="current-password"
+      />
+
+      <button type="button" className={styles.forgotLink} onClick={onForgotPassword}>
+        Mot de passe oublié ?
+      </button>
 
       {error && <div className={styles.error}>{error}</div>}
 
