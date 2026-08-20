@@ -64,15 +64,6 @@ export const LoginForm = ({ onForgotPassword }: LoginFormProps) => {
         minLength={8}
         autoComplete="current-password"
       />
-      <Input
-        type="password"
-        placeholder="Mot de passe"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        required
-        minLength={8}
-        autoComplete="current-password"
-      />
 
       <button type="button" className={styles.forgotLink} onClick={onForgotPassword}>
         Mot de passe oublié ?
